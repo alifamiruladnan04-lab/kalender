@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+<title>Kalender Santai</title>
+<style>
+:root{
+  --card:#1c1c1d; --edge:#343436; --fg:#ffffff; --label:#98989e; --btn:#4a4a4d; --chip:#161617;
+  --serif:"Fraunces",Georgia,"Times New Roman",serif;
+  --sans:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark; box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:transparent;color:var(--fg);font-family:var(--sans);-webkit-font-smoothing:antialiased;padding:30px 16px 40px}
+.scene{max-width:340px;margin:0 auto;perspective:900px;perspective-origin:50% 40%}
+.card{position:relative;width:100%;background:var(--card);transform-style:preserve-3d;will-change:transform;border:1px solid var(--edge);border-radius:22px;padding:20px 20px 18px;transform:rotateX(3deg) rotateY(12deg);box-shadow:calc(var(--sx,0)*1px) calc(26px + var(--sy,0)*1px) 46px -20px #000,0 0 70px -18px #ffffff1c,inset 0 1px 0 #ffffff0a}
+.card::before{content:"";position:absolute;top:-1px;left:28%;width:44%;height:1px;background:linear-gradient(90deg,transparent,#ffffffb0,transparent)}
+.card::after{content:"";position:absolute;inset:0;border-radius:22px;background:#131314;border:1px solid #262628;transform:translateZ(-14px)}
+.glare{position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(230px circle at var(--gx,50%) var(--gy,0%),#ffffff17,transparent 70%)}
+
+.head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ttl{display:flex;align-items:baseline;gap:9px;min-width:0;border:0;background:none;padding:0;color:inherit;cursor:pointer;text-align:left}
+.ring{width:11px;height:11px;border-radius:50%;background:#fff;box-shadow:0 0 0 3px #ffffff26;flex:none;align-self:center}
+.month{font-family:var(--serif);font-weight:700;font-size:22px;letter-spacing:-.01em;white-space:nowrap}
+.year{font-size:11px;font-weight:700;letter-spacing:.02em;color:var(--label)}
+.nav{display:flex;gap:8px}
+.nav button{width:34px;height:34px;border:0;border-radius:50%;background:var(--btn);color:#fff;cursor:pointer;display:grid;place-items:center;transition:transform .15s,background .2s}
+.nav button:hover{background:#5b5b5f}
+.nav button:active{transform:scale(.93)}
+.nav svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+.wk,.grid{display:grid;grid-template-columns:repeat(7,1fr)}
+.wk{margin:18px 0 6px}
+.wk span{text-align:center;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--label)}
+.wk span:last-child{color:#6f6f76}
+.grid{gap:3px 0}
+.day{height:40px;border:1px solid transparent;border-radius:12px;background:none;color:#d8d8dc;font:600 14px var(--serif);cursor:pointer;transition:background .2s,color .2s,border-color .2s}
+.day:hover{background:var(--chip)}
+.day.sun{color:#8d8d93}
+.day.out{color:#56565c}
+.day.sel{border-color:#fff}
+.day.today{background:#fff;color:#111;border-color:#fff}
+.day.today:hover{background:#e6e6e8}
+
+.foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--edge)}
+.info{min-width:0}
+.date{font-family:var(--serif);font-weight:700;font-size:15px;line-height:1.25}
+.rel{margin-top:3px;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--label)}
+.now{flex:none;height:32px;padding:0 14px;border:0;border-radius:16px;background:var(--btn);color:#fff;font:700 12px var(--sans);cursor:pointer;transition:background .2s,transform .15s}
+.now:hover{background:#5b5b5f}
+.now:active{transform:scale(.95)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="scene" id="scene">
+<main class="card" id="card">
+  <div class="glare"></div>
+  <div class="head">
+    <button class="ttl" id="ttl" title="Kembali ke bulan ini" aria-label="Kembali ke bulan ini"><i class="ring"></i><span class="month" id="month"></span><span class="year" id="year"></span></button>
+    <div class="nav">
+      <button id="prev" aria-label="Bulan sebelumnya"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button>
+      <button id="next" aria-label="Bulan berikutnya"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
+    </div>
+  </div>
+  <div class="wk"><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span><span>Min</span></div>
+  <div class="grid" id="grid" role="grid"></div>
+  <div class="foot">
+    <div class="info"><div class="date" id="date"></div><div class="rel" id="rel"></div></div>
+    <button class="now" id="now">Hari ini</button>
+  </div>
+</main>
+</div>
+<script>
+const BULAN=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+const $=id=>document.getElementById(id);
+const dayOnly=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate());
+let today=dayOnly(new Date()), y=today.getFullYear(), m=today.getMonth(), sel=today;
+const same=(a,b)=>a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
+const diff=(a,b)=>Math.round((Date.UTC(a.getFullYear(),a.getMonth(),a.getDate())-Date.UTC(b.getFullYear(),b.getMonth(),b.getDate()))/864e5);
+
+function render(){
+  $("month").textContent=BULAN[m]; $("year").textContent=y;
+  const grid=$("grid"); grid.textContent="";
+  const offset=(new Date(y,m,1).getDay()+6)%7;
+  for(let k=0;k<42;k++){
+    const d=new Date(y,m,1-offset+k), b=document.createElement("button");
+    b.className="day"+(d.getMonth()!==m?" out":"")+((k%7)===6?" sun":"")+(same(d,today)?" today":"")+(same(d,sel)?" sel":"");
+    b.textContent=d.getDate(); b.setAttribute("role","gridcell");
+    b.setAttribute("aria-label",d.toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"}));
+    b.onclick=()=>{sel=d; if(d.getMonth()!==m){m=d.getMonth();y=d.getFullYear()} render()};
+    grid.append(b);
+  }
+  $("date").textContent=sel.toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  const n=diff(sel,today);
+  $("rel").textContent=n===0?"Hari ini":n>0?n+" hari lagi":Math.abs(n)+" hari lalu";
+}
+function go(dm){m+=dm; if(m<0){m=11;y--} if(m>11){m=0;y++} render()}
+$("prev").onclick=()=>go(-1);
+$("next").onclick=()=>go(1);
+function home(){today=dayOnly(new Date()); y=today.getFullYear(); m=today.getMonth(); sel=today; render()}
+$("now").onclick=home; $("ttl").onclick=home;
+render();
+/* ganti hari otomatis saat lewat tengah malam */
+setInterval(()=>{const t=dayOnly(new Date()); if(!same(t,today)){const wasToday=same(sel,today); today=t; if(wasToday)sel=t; render()}},60000);
+
+/* efek 3D: kartu menjauh dari kursor */
+const scene=$("scene"),card=$("card");
+const calm=matchMedia("(prefers-reduced-motion: reduce)").matches;
+let tx=0,ty=0,cx=0,cy=0;
+const cl=(v,mx)=>Math.max(-mx,Math.min(mx,v));
+addEventListener("pointermove",e=>{
+  const r=scene.getBoundingClientRect();
+  const dx=(e.clientX-(r.left+r.width/2))/(r.width/2), dy=(e.clientY-(r.top+r.height/2))/(r.height/2);
+  if(Math.abs(dx)<1.5&&Math.abs(dy)<1.3){tx=cl(dx,1);ty=cl(dy,1)}else{tx=0;ty=0}
+});
+document.addEventListener("pointerleave",()=>{tx=0;ty=0});
+addEventListener("blur",()=>{tx=0;ty=0});
+function frame(ts){
+  cx+=(tx-cx)*.12; cy+=(ty-cy)*.12;
+  const bx=Math.sin(ts/1600)*1.2,by=Math.cos(ts/2000)*1.5,near=Math.hypot(cx,cy);
+  card.style.transform=`translate3d(${-cx*10}px,${-cy*8}px,${-near*34}px) rotateX(${3+bx-cy*16}deg) rotateY(${12+by+cx*16}deg)`;
+  card.style.setProperty("--sx",(-cx*14).toFixed(1));
+  card.style.setProperty("--sy",(-cy*10).toFixed(1));
+  card.style.setProperty("--gx",(50+cx*45).toFixed(1)+"%");
+  card.style.setProperty("--gy",(50+cy*45).toFixed(1)+"%");
+  requestAnimationFrame(frame);
+}
+if(!calm)requestAnimationFrame(frame);
+</script>
+</body>
+</html>
